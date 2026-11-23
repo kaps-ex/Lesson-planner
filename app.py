@@ -112,44 +112,22 @@ def generate_lesson_plan(prompt_text):
     if not API_KEY:
         return "⚠️ Ошибка: API ключ не найден в конфигурации secrets Streamlit."
         
-    # Прописываем линейку моделей от 2.5 до 3.8
-    models_to_try = [
-        "gemini-3.8-flash", "gemini-3.8-pro",
-        "gemini-3.5-flash", "gemini-3.5-pro",
-        "gemini-3.0-flash", "gemini-3.0-pro",
-        "gemini-2.8-flash", "gemini-2.8-pro",
-        "gemini-2.5-flash", "gemini-2.5-pro",
-        "gemini-2.0-flash", "gemini-2.0-pro"
-    ]
-    
-    # Автоматически подтягиваем всё, что есть на ключе
     try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                short_name = m.name.replace("models/", "")
-                if "gemini" in short_name and short_name not in models_to_try:
-                    models_to_try.append(short_name)
-    except Exception:
-        pass
-    
-    last_err = ""
-    for m_name in models_to_try:
-        try:
-            model = genai.GenerativeModel(m_name)
-            response = model.generate_content(prompt_text)
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_err = str(e)
-            continue
-            
-    return f"⚠️ Ошибка генерации: {last_err}"
+        # Используем самую быструю и стабильную модель напрямую
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(prompt_text)
+        if response and response.text:
+            return response.text
+    except Exception as e:
+        return f"⚠️ Ошибка генерации: {str(e)}"
+        
+    return "⚠️ Не удалось получить ответ от модели."
 
 if st.button("Сгенерировать поурочный план", type="primary", use_container_width=True):
     if not subject or not lesson_topic:
         st.warning("⚠️ Пожалуйста, заполните предмет и тему урока.")
     else:
-        with st.spinner("Создаю профессиональный поурочный план..."):
+        with st.spinner("Создаю профессиональный поурочный план (занимает пару секунд)..."):
             prompt = (
                 f"Ты — опытный методист-педагог в Кыргызской Республике. Составь максимально подробный, профессиональный, развернутый поурочный план "
                 f"по предмету '{subject}' для {grade} (обучение на {language} языке). Длительность: {duration}. Тема: '{lesson_topic}'. "
