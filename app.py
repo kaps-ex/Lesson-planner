@@ -112,7 +112,25 @@ def generate_lesson_plan(prompt_text):
     if not API_KEY:
         return "⚠️ Ошибка: API ключ не найден в конфигурации secrets Streamlit."
         
-    models_to_try = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"]
+    # Прописываем линейку моделей от 2.5 до 3.8
+    models_to_try = [
+        "gemini-3.8-flash", "gemini-3.8-pro",
+        "gemini-3.5-flash", "gemini-3.5-pro",
+        "gemini-3.0-flash", "gemini-3.0-pro",
+        "gemini-2.8-flash", "gemini-2.8-pro",
+        "gemini-2.5-flash", "gemini-2.5-pro",
+        "gemini-2.0-flash", "gemini-2.0-pro"
+    ]
+    
+    # Автоматически подтягиваем всё, что есть на ключе
+    try:
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                short_name = m.name.replace("models/", "")
+                if "gemini" in short_name and short_name not in models_to_try:
+                    models_to_try.append(short_name)
+    except Exception:
+        pass
     
     last_err = ""
     for m_name in models_to_try:
